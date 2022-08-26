@@ -19,7 +19,7 @@ namespace MyFirstEfCoreApp
         {
             using (var db = new AppDbContext())              //#A
             {
-                foreach (var book in db.Books.AsNoTracking() //#B
+                foreach (var book in db.Set<Book>().AsNoTracking() //#B
                     .Include(a => a.Author))                 //#C
                 {
                     var webUrl = book.Author.WebUrl ?? "- no web url given -";
@@ -42,7 +42,7 @@ namespace MyFirstEfCoreApp
 
             using (var db = new AppDbContext())
             {
-                var book = db.Books
+                var book = db.Set<Book>()
                     .Include(a => a.Author)                        //#B
                     .Single(b => b.Title == "Quantum Networking"); //#C
 
@@ -73,7 +73,7 @@ namespace MyFirstEfCoreApp
                 loggerFactory.AddProvider(new MyLoggerProvider(logs));
 
                 foreach (var book in
-                    db.Books.AsNoTracking()
+                    db.Set<Book>().AsNoTracking()
                     .Include(a => a.Author))
                 {
                     var webUrl = book.Author.WebUrl == null
@@ -105,7 +105,7 @@ namespace MyFirstEfCoreApp
                 var loggerFactory = (ILoggerFactory)serviceProvider.GetService(typeof(ILoggerFactory));
                 loggerFactory.AddProvider(new MyLoggerProvider(logs));
 
-                var book = db.Books
+                var book = db.Set<Book>()
                     .Include(a => a.Author)
                     .Single(b => b.Title == "Quantum Networking");
                 book.Author.WebUrl = newWebUrl;
@@ -133,7 +133,7 @@ namespace MyFirstEfCoreApp
 
                 db.Database.EnsureDeleted();
                 db.Database.EnsureCreated();
-                if (!db.Books.Any())
+                if (!db.Set<Book>().Any())
                 {
                     WriteTestData(db);
                     Console.WriteLine("Seeded database");
@@ -182,7 +182,7 @@ namespace MyFirstEfCoreApp
                 }
             };
 
-            db.Books.AddRange(books);
+            db.Set<Book>().AddRange(books);
             db.SaveChanges();
         }
     }
