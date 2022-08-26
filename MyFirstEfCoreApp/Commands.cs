@@ -11,14 +11,13 @@ using Microsoft.Extensions.Logging;
 
 namespace MyFirstEfCoreApp
 {
-	internal class Commands : IDisposable
+	internal class Commands
 	{
-		private AppDbContext _dbContext = new AppDbContext();
 		internal void ListAll()
 		{
-			//using (var _dbContext = new AppDbContext())              //#A
+			using (var db = new AppDbContext())              //#A
 			{
-				foreach (var book in _dbContext.Set<Book>().AsNoTracking() //#B
+				foreach (var book in db.Set<Book>().AsNoTracking() //#B
 						.Include(a => a.Author))                 //#C
 				{
 					var webUrl = book.Author.WebUrl ?? "- no web url given -";
@@ -39,14 +38,14 @@ namespace MyFirstEfCoreApp
 			Console.Write("New Quantum Networking WebUrl > ");
 			var newWebUrl = Console.ReadLine();                   //#A
 
-			//using (var _dbContext = new AppDbContext())
+			using (var db = new AppDbContext())
 			{
-				var book = _dbContext.Set<Book>()
+				var book = db.Set<Book>()
 						.Include(a => a.Author)                        //#B
 						.Single(b => b.Title == "Quantum Networking"); //#C
 
 				book.Author.WebUrl = newWebUrl;                    //#D
-				_dbContext.SaveChanges();                                  //#E
+				db.SaveChanges();                                  //#E
 				Console.WriteLine("... SavedChanges called.");
 			}
 
@@ -65,14 +64,14 @@ namespace MyFirstEfCoreApp
 		internal void ListAllWithLogs()
 		{
 			var logs = new List<string>();
-			//using (var _dbContext = new AppDbContext())
+			using (var db = new AppDbContext())
 			{
-				var serviceProvider = _dbContext.GetInfrastructure();
+				var serviceProvider = db.GetInfrastructure();
 				var loggerFactory = (ILoggerFactory)serviceProvider.GetService(typeof(ILoggerFactory));
 				loggerFactory.AddProvider(new MyLoggerProvider(logs));
 
 				foreach (var book in
-						_dbContext.Set<Book>().AsNoTracking()
+						db.Set<Book>().AsNoTracking()
 						.Include(a => a.Author))
 				{
 					var webUrl = book.Author.WebUrl == null
@@ -98,17 +97,17 @@ namespace MyFirstEfCoreApp
 			Console.Write("New Quantum Networking WebUrl > ");
 			var newWebUrl = Console.ReadLine();
 
-			//using (var _dbContext = new AppDbContext())
+			using (var db = new AppDbContext())
 			{
-				var serviceProvider = _dbContext.GetInfrastructure();
+				var serviceProvider = db.GetInfrastructure();
 				var loggerFactory = (ILoggerFactory)serviceProvider.GetService(typeof(ILoggerFactory));
 				loggerFactory.AddProvider(new MyLoggerProvider(logs));
 
-				var book = _dbContext.Set<Book>()
+				var book = db.Set<Book>()
 						.Include(a => a.Author)
 						.Single(b => b.Title == "Quantum Networking");
 				book.Author.WebUrl = newWebUrl;
-				_dbContext.SaveChanges();
+				db.SaveChanges();
 				Console.Write("... SavedChanges called.");
 			}
 			Console.WriteLine("---------- LOGS ------------------");
@@ -125,23 +124,23 @@ namespace MyFirstEfCoreApp
 		/// <returns>returns true if database database was created</returns>
 		internal bool WipeCreateSeed(bool onlyIfNoDatabase)
 		{
-			//using (var _dbContext = new AppDbContext())
+			using (var db = new AppDbContext())
 			{
-				if (onlyIfNoDatabase && (_dbContext.GetService<IDatabaseCreator>() as RelationalDatabaseCreator).Exists())
+				if (onlyIfNoDatabase && (db.GetService<IDatabaseCreator>() as RelationalDatabaseCreator).Exists())
 					return false;
 
-				_dbContext.Database.EnsureDeleted();
-				_dbContext.Database.EnsureCreated();
-				if (!_dbContext.Set<Book>().Any())
+				db.Database.EnsureDeleted();
+				db.Database.EnsureCreated();
+				if (!db.Set<Book>().Any())
 				{
-					WriteTestData(_dbContext);
+					WriteTestData(db);
 					Console.WriteLine("Seeded database");
 				}
 			}
 			return true;
 		}
 
-		private void WriteTestData(AppDbContext _dbContext)
+		private void WriteTestData(AppDbContext db)
 		{
 			var martinFowler = new Author
 			{
@@ -181,13 +180,8 @@ namespace MyFirstEfCoreApp
 								}
 						};
 
-			_dbContext.Set<Book>().AddRange(books);
-			_dbContext.SaveChanges();
-		}
-
-		public void Dispose()
-		{
-			_dbContext.Dispose();
+			db.Set<Book>().AddRange(books);
+			db.SaveChanges();
 		}
 	}
 }

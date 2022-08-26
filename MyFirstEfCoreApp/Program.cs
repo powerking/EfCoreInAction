@@ -2,6 +2,7 @@
 // Licensed under MIT licence. See License.txt in the project root for license information.
 
 using System;
+using System.Linq;
 
 namespace MyFirstEfCoreApp
 {
@@ -9,15 +10,13 @@ namespace MyFirstEfCoreApp
 	{
 		public static void Main(string[] args)
 		{
-			using (Commands commands = new Commands())
-			{
-				Console.Write(
-									"Checking if database exists... ");
-				Console.WriteLine(commands.WipeCreateSeed(true) ? "created database and seeded it." : "it exists.");
-				
-				ShowMeun(commands);
-			}
+			Commands commands = new Commands();
 
+			Console.Write(
+								"Checking if database exists... ");
+			Console.WriteLine(commands.WipeCreateSeed(true) ? "created database and seeded it." : "it exists.");
+				
+			ShowMeun(commands);
 		}
 
 		private static void ShowMeun(Commands Commands)
@@ -28,7 +27,8 @@ namespace MyFirstEfCoreApp
 								"Commands: l (list), u (change url), r (resetDb) and e (exit) - add -l to first two for logs");
 
 				Console.Write("> ");
-				var cmdText = Console.ReadLine();
+				string input = Console.ReadLine();
+				var cmdText = input.Split(' ').Where(t => t.Length > 0).Aggregate((a, b) => $"{a} {b}");
 				switch (cmdText)
 				{
 					case "l":
